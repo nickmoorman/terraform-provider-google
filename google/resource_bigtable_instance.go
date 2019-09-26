@@ -116,6 +116,7 @@ func resourceBigtableInstance() *schema.Resource {
 }
 
 func resourceBigtableInstanceCreate(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("RBI_CREATE")
 	config := meta.(*Config)
 	ctx := context.Background()
 
@@ -161,6 +162,7 @@ func resourceBigtableInstanceCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceBigtableInstanceRead(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("RBI_READ")
 	config := meta.(*Config)
 	ctx := context.Background()
 
@@ -177,6 +179,7 @@ func resourceBigtableInstanceRead(d *schema.ResourceData, meta interface{}) erro
 	defer c.Close()
 
 	instance, err := c.InstanceInfo(ctx, d.Id())
+	log.Printf("INSTANCE: %s", instance)
 	if err != nil {
 		log.Printf("[WARN] Removing %s because it's gone", d.Id())
 		d.SetId("")
@@ -184,10 +187,18 @@ func resourceBigtableInstanceRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	d.Set("project", project)
+	log.Printf("CONFIG OBJECT: %#v", d)
 
 	clusters := d.Get("cluster").([]interface{})
+	clus, exists := d.GetOk("cluster")
+	log.Printf("CLUSTER EXISTS: %s", exists)
+	log.Printf("CLUSTER CONFIG: %s", clus)
+	oldc, newc := d.GetChange("cluster")
+	log.Printf("OLD: %s; NEW: %s", oldc, newc)
+	log.Printf("CLUSTERS: %+v", clusters)
 	clusterState := []map[string]interface{}{}
 	for _, cl := range clusters {
+		log.Printf("CLUSTER: %+v", cl)
 		cluster := cl.(map[string]interface{})
 		clus, err := c.GetCluster(ctx, instance.Name, cluster["cluster_id"].(string))
 		if err != nil {
@@ -212,6 +223,7 @@ func resourceBigtableInstanceRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceBigtableInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("RBI_UPDATE")
 	config := meta.(*Config)
 	ctx := context.Background()
 
